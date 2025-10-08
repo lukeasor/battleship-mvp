@@ -4,7 +4,7 @@ A fully playable browser-based Battleship game with AI opponent, manual ship pla
 
 ## 🎮 Live Game
 
-**Play now:** https://lukeasor.github.io/battleship-mvp/
+**Play now:** [https://lukeasor.github.io/battleship-mvp/](https://battleship-game-cq5yq2un.devinapps.com/)
 
 ## 📦 Repository
 
