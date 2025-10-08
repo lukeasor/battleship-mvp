@@ -36,9 +36,9 @@ export function Cell({
       return sonarHint === 'hit' ? 'bg-yellow-400' : 'bg-blue-200'
     }
     
-    if (state === 'hit') return 'bg-red-500'
+    if (state === 'hit') return 'hit-explosion'
     if (state === 'miss') return 'bg-blue-300'
-    if (state === 'ship' && isPlayerBoard) return 'bg-gray-600'
+    if (state === 'ship' && isPlayerBoard) return 'ship-cell'
     return 'bg-blue-100'
   }
 

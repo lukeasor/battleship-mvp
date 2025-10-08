@@ -2,6 +2,69 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes oceanWave {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes explosion {
+  0% {
+    transform: scale(0.5);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.ocean-background {
+  background: linear-gradient(45deg, 
+    #1a5f7a 0%, 
+    #2d7a96 25%, 
+    #1a5f7a 50%, 
+    #2d7a96 75%, 
+    #1a5f7a 100%);
+  background-size: 400% 400%;
+  animation: oceanWave 15s ease infinite;
+}
+
+.ship-cell {
+  background: linear-gradient(135deg, #555 0%, #777 50%, #555 100%);
+  box-shadow: inset 0 1px 3px rgba(255,255,255,0.3), inset 0 -1px 3px rgba(0,0,0,0.5);
+  position: relative;
+}
+
+.ship-cell::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 2px,
+    rgba(255,255,255,0.1) 2px,
+    rgba(255,255,255,0.1) 4px
+  );
+}
+
+.hit-explosion {
+  animation: explosion 0.5s ease-out;
+  background: radial-gradient(circle, #ff0000 0%, #cc0000 50%, #990000 100%);
+  box-shadow: 0 0 10px #ff0000, inset 0 0 10px rgba(255,255,255,0.5);
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',

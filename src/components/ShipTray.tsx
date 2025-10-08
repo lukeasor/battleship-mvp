@@ -9,7 +9,7 @@ interface ShipTrayProps {
 export function ShipTray({ availableShips, selectedShip, onSelectShip }: ShipTrayProps) {
   return (
     <div className="mb-4">
-      <h3 className="text-lg font-semibold mb-2">Select Ship to Place:</h3>
+      <h3 className="text-lg font-semibold mb-2 text-white">Select Ship to Place:</h3>
       <div className="flex flex-wrap gap-2">
         {availableShips.map(ship => (
           <button

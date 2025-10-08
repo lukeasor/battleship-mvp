@@ -51,8 +51,18 @@ function App() {
   const [playerNameInput, setPlayerNameInput] = useState('')
   const [showNamePrompt, setShowNamePrompt] = useState(true)
   const [hoverPreview, setHoverPreview] = useState<{ positions: Position[]; isValid: boolean } | null>(null)
+  const [currentHoverPos, setCurrentHoverPos] = useState<Position | null>(null)
 
   const debugMode = new URLSearchParams(window.location.search).get('debug') === '1'
+
+  useEffect(() => {
+    if (currentHoverPos && gameState.gameStatus === 'setup' && selectedShip) {
+      const length = SHIP_CONFIGS[selectedShip]
+      const positions = getShipPositions(currentHoverPos, length, isHorizontal)
+      const isValid = canPlaceShip(gameState.playerBoard, positions)
+      setHoverPreview({ positions, isValid })
+    }
+  }, [isHorizontal, currentHoverPos, gameState.gameStatus, selectedShip, gameState.playerBoard])
 
   useEffect(() => {
     const konamiCode = [
@@ -159,6 +169,7 @@ function App() {
         setAvailableShips(newAvailable)
         setSelectedShip(null)
         setHoverPreview(null)
+        setCurrentHoverPos(null)
         
         if (newAvailable.length === 0) {
           placeAIShips()
@@ -178,6 +189,7 @@ function App() {
   }
 
   const handleCellHover = (row: number, col: number) => {
+    setCurrentHoverPos({ row, col })
     if (gameState.gameStatus === 'setup' && selectedShip) {
       const length = SHIP_CONFIGS[selectedShip]
       const positions = getShipPositions({ row, col }, length, isHorizontal)
@@ -188,6 +200,7 @@ function App() {
 
   const handleCellLeave = () => {
     setHoverPreview(null)
+    setCurrentHoverPos(null)
   }
 
   const handlePlayerShot = (position: Position) => {
@@ -394,6 +407,7 @@ function App() {
     setPlayerNameInput('')
     setKonamiProgress(0)
     setHoverPreview(null)
+    setCurrentHoverPos(null)
   }
 
   const getStatusMessage = () => {
@@ -405,9 +419,9 @@ function App() {
 
   if (showNamePrompt) {
     return (
-      <div className="min-h-screen bg-gray-800 flex items-center justify-center">
+      <div className="min-h-screen ocean-background flex items-center justify-center">
         <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
-          <h1 className="text-3xl font-bold mb-4">battleship</h1>
+          <h1 className="text-3xl font-bold mb-4">Battleship</h1>
           <p className="mb-4">Enter your name to begin:</p>
           <input
             type="text"
@@ -430,10 +444,10 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-800 p-4">
+    <div className="min-h-screen ocean-background p-4">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-4xl font-bold text-white text-center mb-8">
-          battleship
+          Battleship
         </h1>
 
         <div className="mb-6">
