@@ -85,3 +85,60 @@ function getRandomUnfiredPosition(firedPositions: Set<string>): Position {
 export function hasAIFired(firedPositions: Set<string>, pos: Position): boolean {
   return firedPositions.has(`${pos.row},${pos.col}`)
 }
+
+export function shouldAIUseSonar(
+  aiState: AIState,
+  firedPositions: Set<string>,
+  sonarAvailable: boolean
+): boolean {
+  if (!sonarAvailable) return false
+  
+  if (aiState.mode === 'hunt' && firedPositions.size < 15) {
+    return Math.random() < 0.2
+  }
+  
+  return false
+}
+
+export function shouldAIUseAirstrike(
+  aiState: AIState,
+  airstrikeAvailable: boolean
+): boolean {
+  if (!airstrikeAvailable) return false
+  
+  if (aiState.mode === 'target' && aiState.hitCells.length >= 2) {
+    const firstHit = aiState.hitCells[0]
+    const hasHorizontalPattern = aiState.hitCells.some(
+      hit => hit.row === firstHit.row && hit.col !== firstHit.col
+    )
+    const hasVerticalPattern = aiState.hitCells.some(
+      hit => hit.col === firstHit.col && hit.row !== firstHit.row
+    )
+    
+    return hasHorizontalPattern || hasVerticalPattern
+  }
+  
+  return false
+}
+
+export function getAIAirstrikeTarget(aiState: AIState): { direction: 'row' | 'col'; index: number } | null {
+  if (aiState.hitCells.length < 2) return null
+  
+  const firstHit = aiState.hitCells[0]
+  const hasHorizontalPattern = aiState.hitCells.some(
+    hit => hit.row === firstHit.row && hit.col !== firstHit.col
+  )
+  
+  if (hasHorizontalPattern) {
+    return { direction: 'row', index: firstHit.row }
+  } else {
+    return { direction: 'col', index: firstHit.col }
+  }
+}
+
+export function getAISonarTarget(): Position {
+  return {
+    row: Math.floor(Math.random() * 10),
+    col: Math.floor(Math.random() * 10),
+  }
+}

@@ -33,6 +33,8 @@ export interface GameState {
   airstrikeAvailable: boolean
   sonarUnlocked: boolean
   airstrikeUnlocked: boolean
+  aiSonarAvailable: boolean
+  aiAirstrikeAvailable: boolean
 }
 
 export interface AIState {

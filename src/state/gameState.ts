@@ -14,6 +14,8 @@ export function createInitialGameState(): GameState {
     airstrikeAvailable: false,
     sonarUnlocked: false,
     airstrikeUnlocked: false,
+    aiSonarAvailable: false,
+    aiAirstrikeAvailable: false,
   }
 }
 

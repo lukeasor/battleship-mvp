@@ -24,6 +24,10 @@ import {
   createAIState,
   getAIMove,
   updateAIStateAfterShot,
+  shouldAIUseSonar,
+  shouldAIUseAirstrike,
+  getAIAirstrikeTarget,
+  getAISonarTarget,
 } from './logic/ai'
 import {
   getSonarScanArea,
@@ -46,6 +50,7 @@ function App() {
   const [modalContent, setModalContent] = useState({ title: '', message: '' })
   const [playerNameInput, setPlayerNameInput] = useState('')
   const [showNamePrompt, setShowNamePrompt] = useState(true)
+  const [hoverPreview, setHoverPreview] = useState<{ positions: Position[]; isValid: boolean } | null>(null)
 
   const debugMode = new URLSearchParams(window.location.search).get('debug') === '1'
 
@@ -70,6 +75,7 @@ function App() {
             ...prev,
             airstrikeUnlocked: true,
             airstrikeAvailable: true,
+            aiAirstrikeAvailable: true,
           }))
           setModalContent({
             title: 'Airstrike Unlocked!',
@@ -97,6 +103,7 @@ function App() {
       playerName: name,
       sonarUnlocked: unlockSonar,
       sonarAvailable: unlockSonar,
+      aiSonarAvailable: unlockSonar,
     }))
     
     setShowNamePrompt(false)
@@ -151,6 +158,7 @@ function App() {
         const newAvailable = availableShips.filter(s => s !== selectedShip)
         setAvailableShips(newAvailable)
         setSelectedShip(null)
+        setHoverPreview(null)
         
         if (newAvailable.length === 0) {
           placeAIShips()
@@ -167,6 +175,19 @@ function App() {
     ) {
       handlePlayerShot({ row, col })
     }
+  }
+
+  const handleCellHover = (row: number, col: number) => {
+    if (gameState.gameStatus === 'setup' && selectedShip) {
+      const length = SHIP_CONFIGS[selectedShip]
+      const positions = getShipPositions({ row, col }, length, isHorizontal)
+      const isValid = canPlaceShip(gameState.playerBoard, positions)
+      setHoverPreview({ positions, isValid })
+    }
+  }
+
+  const handleCellLeave = () => {
+    setHoverPreview(null)
   }
 
   const handlePlayerShot = (position: Position) => {
@@ -201,6 +222,73 @@ function App() {
   }
 
   const handleAITurn = () => {
+    if (shouldAIUseAirstrike(aiState, gameState.aiAirstrikeAvailable)) {
+      const target = getAIAirstrikeTarget(aiState)
+      if (target) {
+        const positions = executeAirstrike(target.direction, target.index)
+        
+        let newBoard = gameState.playerBoard
+        positions.forEach(pos => {
+          if (!aiFiredPositions.has(`${pos.row},${pos.col}`)) {
+            const result = processShot(newBoard, pos, gameState.playerShips)
+            newBoard = result.newBoard
+            setAiFiredPositions(prev => new Set(prev).add(`${pos.row},${pos.col}`))
+          }
+        })
+
+        setGameState(prev => ({
+          ...prev,
+          playerBoard: newBoard,
+          aiAirstrikeAvailable: false,
+        }))
+
+        setModalContent({
+          title: 'AI Used Airstrike!',
+          message: `The AI launched an airstrike on ${target.direction === 'row' ? 'row ' + String.fromCharCode(65 + target.index) : 'column ' + (target.index + 1)}!`,
+        })
+        setShowModal(true)
+
+        if (checkGameOver(gameState.playerShips)) {
+          setGameState(prev => ({ ...prev, gameStatus: 'lost' }))
+          setModalContent({
+            title: 'Defeat',
+            message: 'The AI has sunk all your ships. Better luck next time!',
+          })
+          setShowModal(true)
+        }
+        return
+      }
+    }
+
+    if (shouldAIUseSonar(aiState, aiFiredPositions, gameState.aiSonarAvailable)) {
+      const center = getAISonarTarget()
+      const area = getSonarScanArea(center)
+      const results = getSonarResults(gameState.playerBoard, area)
+      
+      const newTargets: Position[] = []
+      results.forEach((result, key) => {
+        if (result === 'hit') {
+          const [row, col] = key.split(',').map(Number)
+          newTargets.push({ row, col })
+        }
+      })
+
+      setGameState(prev => ({ ...prev, aiSonarAvailable: false }))
+      setAIState(prev => ({
+        ...prev,
+        targetQueue: [...prev.targetQueue, ...newTargets],
+      }))
+
+      setModalContent({
+        title: 'AI Used Sonar!',
+        message: 'The AI scanned a 3x3 area of your board!',
+      })
+      setShowModal(true)
+      
+      setTimeout(() => handleAITurn(), 1500)
+      return
+    }
+
     const { position, newAIState } = getAIMove(
       gameState.playerBoard,
       aiState,
@@ -305,6 +393,7 @@ function App() {
     setShowNamePrompt(true)
     setPlayerNameInput('')
     setKonamiProgress(0)
+    setHoverPreview(null)
   }
 
   const getStatusMessage = () => {
@@ -316,9 +405,9 @@ function App() {
 
   if (showNamePrompt) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-400 to-blue-600 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-800 flex items-center justify-center">
         <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
-          <h1 className="text-3xl font-bold mb-4">Battleship MVP</h1>
+          <h1 className="text-3xl font-bold mb-4">battleship</h1>
           <p className="mb-4">Enter your name to begin:</p>
           <input
             type="text"
@@ -341,10 +430,10 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-400 to-blue-600 p-4">
+    <div className="min-h-screen bg-gray-800 p-4">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-4xl font-bold text-white text-center mb-8">
-          Battleship MVP
+          battleship
         </h1>
 
         <div className="mb-6">
@@ -396,6 +485,9 @@ function App() {
               onCellClick={
                 gameState.gameStatus === 'setup' ? handleCellClick : undefined
               }
+              onCellHover={gameState.gameStatus === 'setup' ? handleCellHover : undefined}
+              onCellLeave={gameState.gameStatus === 'setup' ? handleCellLeave : undefined}
+              hoverPreview={hoverPreview}
               isPlayerBoard={true}
               disabled={gameState.gameStatus !== 'setup'}
             />
