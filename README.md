@@ -176,7 +176,7 @@ Run tests: `pnpm test`
 
 ## 🔗 Links
 
-- **Live Game:** https://lukeasor.github.io/battleship-mvp/
+- **Live Game:** [https://lukeasor.github.io/battleship-mvp/](https://battleship-game-cq5yq2un.devinapps.com/)
 - **GitHub Repo:** https://github.com/lukeasor/battleship-mvp
 - **Bug Log:** [BUGLOG.md](./BUGLOG.md)
 - **Devin Session:** https://app.devin.ai/sessions/9d2c158a1f8c4f2faccc13e990aac589
